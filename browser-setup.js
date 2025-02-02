@@ -2,8 +2,8 @@ const puppeteer = require('puppeteer-extra');
 const StealthPlugin = require('puppeteer-extra-plugin-stealth');
 const path = require('path');
 const fs = require('fs');
-const { execSync } = require('child_process');
-const { executablePath } = require('puppeteer');
+const {execSync} = require('child_process');
+const {executablePath} = require('puppeteer');
 const os = require('os');
 
 puppeteer.use(StealthPlugin());
@@ -14,9 +14,9 @@ class BrowserSetup {
     }
 
     async customizeChromeTesting() {
-        // Skip customization for Windows
-        if (os.platform() === 'win32') {
-            console.log('Chrome customization skipped on Windows');
+        // Skip customization for Windows or Linux
+        if (os.platform() === 'win32' || os.platform() === 'linux') {
+            console.log('Chrome customization skipped on ' + os.platform());
             return executablePath();
         }
 
