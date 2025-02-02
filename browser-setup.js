@@ -114,14 +114,17 @@ class BrowserSetup {
             defaultViewport: null,
             args: this._getChromeLaunchArgs(config),
             ignoreHTTPSErrors: true,
-            ignoreDefaultArgs: ["--disable-extensions", "--enable-automation"],
+            ignoreDefaultArgs: [
+                "--disable-extensions",
+                "--enable-automation",
+                // customExecutablePath.indexOf("chromium") >= 0 ? '--disable-blink-features=AutomationControlled' : null
+            ].filter(x => x),
         };
     }
 
     _getChromeLaunchArgs(config) {
         return [
-            '--no-sandbox',
-            '--disable-setuid-sandbox',
+            '--no-default-browser-check',
             '--disable-infobars',
             '--start-maximized',
             '--ignore-certifcate-errors',
