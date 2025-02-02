@@ -101,6 +101,7 @@ class BrowserSetup {
         return {
             executablePath: customExecutablePath,
             headless: false,
+            defaultViewport: null,
             args: this._getChromeLaunchArgs(config),
             ignoreHTTPSErrors: true,
             ignoreDefaultArgs: ["--disable-extensions", "--enable-automation"],
@@ -112,7 +113,6 @@ class BrowserSetup {
             '--no-sandbox',
             '--disable-setuid-sandbox',
             '--disable-infobars',
-            '--window-position=0,0',
             '--start-maximized',
             '--ignore-certifcate-errors',
             '--ignore-certifcate-errors-spki-list',
