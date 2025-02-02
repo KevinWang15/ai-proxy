@@ -1,18 +1,14 @@
 const path = require('path');
 const fs = require('fs');
 const readline = require('readline');
-const axios = require('axios');
-const { CookieJar } = require('tough-cookie');
-const { wrapper: axiosCookieJarSupport } = require('axios-cookiejar-support');
+const { Cookie, CookieJar } = require('tough-cookie');
 
 const PASSWORD_FILE = path.join(__dirname, 'password.txt');
-const jar = new CookieJar();
-axiosCookieJarSupport(axios);
+const cookieJar = new CookieJar();
 
 async function getConfig() {
     const password = await promptForPassword();
     const url = decodeBase64(password);
-
     try {
         console.log('Downloading and parsing config...');
         const config = await fetchConfig(url);
@@ -54,16 +50,53 @@ function decodeBase64(encoded) {
     }
 }
 
-async function fetchConfig(url) {
-    try {
-        const response = await axios.get(url, {
-            jar,
-            maxRedirects: 5,
+async function fetchConfig(url, maxRedirects = 5) {
+    let currentUrl = url;
+    let redirectCount = 0;
+
+    while (redirectCount < maxRedirects) {
+        // Get any existing cookies for this domain
+        const cookies = await cookieJar.getCookiesSync(currentUrl);
+        const cookieHeader = cookies.map(cookie => cookie.cookieString()).join('; ');
+
+        const response = await fetch(currentUrl, {
+            headers: {
+                Cookie: cookieHeader || ''
+            },
+            redirect: 'manual' // Handle redirects manually
         });
-        return response.data;
-    } catch (err) {
-        throw new Error(`Failed to download the configuration file: ${err.message}`);
+
+        // Save any new cookies from the response
+        const setCookieHeaders = response.headers.getSetCookie?.() ||
+            response.headers.raw?.()['set-cookie'] ||
+            [];
+
+        for (const header of setCookieHeaders) {
+            const cookie = Cookie.parse(header);
+            if (cookie) {
+                await cookieJar.setCookieSync(cookie, currentUrl);
+            }
+        }
+
+        if (response.status >= 300 && response.status < 400) {
+            // Handle redirect
+            const location = response.headers.get('location');
+            if (!location) {
+                throw new Error('Redirect location not found');
+            }
+            currentUrl = new URL(location, currentUrl).toString();
+            redirectCount++;
+            continue;
+        }
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        return response.json();
     }
+
+    throw new Error('Too many redirects');
 }
 
 function savePassword(password) {
@@ -73,4 +106,3 @@ function savePassword(password) {
 module.exports = {
     getConfig
 };
-
