@@ -14,6 +14,16 @@ class BrowserSetup {
     }
 
     async customizeChromeTesting() {
+        // Handle ARM Linux first
+        if (os.platform() === 'linux' && process.arch === 'arm64') {
+            const chromiumPath = execSync('which chromium').toString().trim();
+            if (!chromiumPath) {
+                throw new Error('Chromium not found. Please install chromium using your package manager.');
+            }
+            console.log('Using system Chromium on ARM Linux:', chromiumPath);
+            return chromiumPath;
+        }
+
         // Skip customization for Windows or Linux
         if (os.platform() === 'win32' || os.platform() === 'linux') {
             console.log('Chrome customization skipped on ' + os.platform());
