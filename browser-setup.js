@@ -4,6 +4,7 @@ const path = require('path');
 const fs = require('fs');
 const { execSync } = require('child_process');
 const { executablePath } = require('puppeteer');
+const os = require('os');
 
 puppeteer.use(StealthPlugin());
 
@@ -13,6 +14,12 @@ class BrowserSetup {
     }
 
     async customizeChromeTesting() {
+        // Skip customization for Windows
+        if (os.platform() === 'win32') {
+            console.log('Chrome customization skipped on Windows');
+            return executablePath();
+        }
+
         const originalPath = executablePath();
         const baseDir = path.dirname(path.dirname(originalPath));
         const customAppName = 'Chrome for AI.app';
@@ -106,6 +113,7 @@ class BrowserSetup {
             '--disable-setuid-sandbox',
             '--disable-infobars',
             '--window-position=0,0',
+            '--start-maximized',
             '--ignore-certifcate-errors',
             '--ignore-certifcate-errors-spki-list',
             `--user-data-dir=${this.userDataDir}`,
