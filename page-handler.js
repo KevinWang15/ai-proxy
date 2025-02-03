@@ -17,8 +17,9 @@ class PageHandler {
             }
         });
 
+        // Authenticate if proxy credentials are provided
         if (this.config.proxyConfig.username) {
-            await page.authenticate({
+            await page.context().setHTTPCredentials({
                 username: this.config.proxyConfig.username,
                 password: this.config.proxyConfig.password
             });
@@ -69,7 +70,8 @@ class PageHandler {
             this.ipCheckHasPassed = true;
 
             // After IP check passes, update request interception for all pages
-            const pages = await page.browser().pages();
+            const context = page.context();
+            const pages = await context.pages(); // Get all pages within the context
             for (const p of pages) {
                 // Reset the request interception to allow normal navigation
                 p.removeAllListeners('route');
