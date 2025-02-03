@@ -8,9 +8,7 @@
   },
   "private": true,
   "dependencies": {
-    "puppeteer": "^24",
-    "puppeteer-extra": "^3.3.6",
-    "puppeteer-extra-plugin-stealth": "^2.11.2",
+    "playwright": "^1.30.0",
     "tough-cookie": "^5.1.0"
   }
 }

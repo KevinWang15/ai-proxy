@@ -5,15 +5,15 @@ class PageHandler {
     }
 
     async setupPage(page) {
-        await page.setViewport();
+        // Set the viewport size using Playwright's method
+        await page.setViewportSize({ width: 1280, height: 800 });  // You can customize the dimensions
 
-        // Enable request interception for all pages
-        await page.setRequestInterception(true);
-        page.on('request', request => {
+        // Intercept requests using Playwright's route event
+        await page.route('**/*', (route, request) => {
             if (request.isNavigationRequest() && request.url() !== 'about:blank' && !this.ipCheckHasPassed) {
-                request.abort();
+                route.abort();
             } else {
-                request.continue();
+                route.continue();
             }
         });
 
@@ -27,7 +27,7 @@ class PageHandler {
 
     async loadAndSetCookies(page) {
         try {
-            const client = await page.target().createCDPSession();
+            const client = await page.context().newCDPSession(page);
             await client.send("Network.enable");
             await client.send("Network.clearBrowserCookies");
 
@@ -72,10 +72,8 @@ class PageHandler {
             const pages = await page.browser().pages();
             for (const p of pages) {
                 // Reset the request interception to allow normal navigation
-                await p.setRequestInterception(false);
-                await p.setRequestInterception(true);
-                p.removeAllListeners('request');
-                p.on('request', request => request.continue());
+                p.removeAllListeners('route');
+                p.on('route', (route, request) => route.continue());
             }
 
             return true;

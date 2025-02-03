@@ -1,4 +1,4 @@
-const puppeteer = require('puppeteer-extra');
+const { chromium } = require('playwright');
 
 class BrowserManager {
     constructor(config, browserSetup, pageHandler) {
@@ -10,45 +10,32 @@ class BrowserManager {
     async launch() {
         await this.browserSetup.setupUserDataDirectory();
         const customExecutablePath = await this.browserSetup.customizeChromeTesting();
-        console.log('Custom Chrome path:', customExecutablePath);
+        console.log('Custom browser path:', customExecutablePath);
 
         const launchOptions = this.browserSetup.getLaunchOptions(customExecutablePath, this.config);
-        const browser = await puppeteer.launch(launchOptions);
 
-        await this._setupBrowserEvents(browser);
-        await this._initializeFirstPage(browser);
+        // Launch persistent context with userDataDir
+        const context = await chromium.launchPersistentContext(this.browserSetup.userDataDir, launchOptions);
 
-        return browser;
+        await this._setupBrowserEvents(context);
+        await this._initializeFirstPage(context);
+
+        return context;
     }
 
-    async _setupBrowserEvents(browser) {
-        browser.on('targetcreated', async (target) => {
-            if (target.type() === 'page') {
-                const pages = await browser.pages();
-                if (!this.pageHandler.ipCheckHasPassed && pages.length > 1) {
-                    await (await target.page()).close();
-                } else {
-                    await this.pageHandler.setupPage(await target.page());
-                }
-            }
+    async _setupBrowserEvents(context) {
+        context.on('page', async (page) => {
+            await this.pageHandler.setupPage(page);
         });
 
-        browser.on('targetdestroyed', () => this._closeIfNoPages(browser));
-        browser.on('disconnected', () => {
+        context.on('disconnected', () => {
             console.log('Browser has been closed');
             process.exit(0);
         });
     }
 
-    async _closeIfNoPages(browser) {
-        const pages = await browser.pages();
-        if (pages.length === 0) {
-            await browser.close();
-        }
-    }
-
-    async _initializeFirstPage(browser) {
-        const [page] = await browser.pages();
+    async _initializeFirstPage(context) {
+        const page = await context.newPage();
         await this.pageHandler.setupPage(page);
         await this.pageHandler.loadAndSetCookies(page);
 
