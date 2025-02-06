@@ -24,12 +24,7 @@ class BrowserManager {
     async _setupBrowserEvents(browser) {
         browser.on('targetcreated', async (target) => {
             if (target.type() === 'page') {
-                const pages = await browser.pages();
-                if (!this.pageHandler.ipCheckHasPassed && pages.length > 1) {
-                    await (await target.page()).close();
-                } else {
-                    await this.pageHandler.setupPage(await target.page());
-                }
+                await this.pageHandler.setupPage(await target.page());
             }
         });
 
@@ -52,11 +47,6 @@ class BrowserManager {
         await this.pageHandler.setupPage(page);
         await this.pageHandler.loadAndSetCookies(page);
 
-        await page.goto('about:blank');
-        await this.pageHandler.performIpCheck(page);
-        console.log('IP check passed');
-
-        console.log('Navigating to chatgpt.com');
         await page.goto('https://chatgpt.com/');
     }
 }

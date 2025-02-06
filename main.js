@@ -13,16 +13,11 @@ async function main() {
         process.exit(1);
     }
 
-    try {
-        const config = await getConfig();
-        const browserSetup = new BrowserSetup();
-        const pageHandler = new PageHandler(config);
-        const browserManager = new BrowserManager(config, browserSetup, pageHandler);
-        await browserManager.launch();
-    } catch (error) {
-        console.error('Error in main:', error);
-        process.exit(1);
-    }
+    const config = await getConfig();
+    const browserSetup = new BrowserSetup();
+    const pageHandler = new PageHandler(config);
+    const browserManager = new BrowserManager(config, browserSetup, pageHandler);
+    await browserManager.launch();
 }
 
 main();
