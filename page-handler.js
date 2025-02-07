@@ -5,13 +5,6 @@ class PageHandler {
 
     async setupPage(page) {
         await page.setViewport();
-
-        if (this.config.proxyConfig.username) {
-            await page.authenticate({
-                username: this.config.proxyConfig.username,
-                password: this.config.proxyConfig.password
-            });
-        }
     }
 
     async loadAndSetCookies(page) {
