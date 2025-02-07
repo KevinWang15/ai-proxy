@@ -2,3 +2,4 @@ custom-chrome-data
 node_modules
 .idea
 password.txt
+proxy-auth-ext
