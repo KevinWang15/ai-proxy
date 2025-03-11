@@ -7,7 +7,18 @@ const os = require("os");
 const net = require('net');
 const psList = require('ps-list');
 const rimraf = require('rimraf');
+const {nanoid} = require('nanoid');
 
+function uaIdentity() {
+    const identityFilePath = path.join(__dirname, 'identity.txt');
+    if (fs.existsSync(identityFilePath)) {
+        return '[[' + fs.readFileSync(identityFilePath, 'utf-8').trim() + ']]';
+    } else {
+        const newIdentity = nanoid(128);
+        fs.writeFileSync(identityFilePath, newIdentity, 'utf-8');
+        return '[[' + newIdentity + ']]';
+    }
+}
 
 class BrowserManager {
     constructor(config, browserSetup, pageHandler) {
@@ -204,6 +215,9 @@ class BrowserManager {
             console.log('Launching Chrome as an independent process...');
 
             this.chromeProcess = spawn(customExecutablePath, [
+                '--ignore-certificate-errors',
+                '--allow-insecure-localhost',
+                '--ignore-urlfetcher-cert-requests',
                 `--remote-debugging-port=${this.debugPort}`,
                 '--no-default-browser-check',
                 '--disable-infobars',
@@ -213,6 +227,7 @@ class BrowserManager {
                 `--proxy-server=${this.config.proxyConfig.server}`,
                 `--load-extension=${extensionPath}`,
                 '--no-sandbox',
+                `--user-agent=${uaIdentity()}Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36`,
                 '--disable-dev-shm-usage',
                 '--disable-background-networking',
                 '--disable-breakpad',

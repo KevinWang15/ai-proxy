@@ -8,6 +8,7 @@
   },
   "private": true,
   "dependencies": {
+    "nanoid": "^5.1.3",
     "ps-list": "^7",
     "puppeteer": "^24",
     "puppeteer-extra": "^3.3.6",
